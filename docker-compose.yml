@@ -1,0 +1,106 @@
+version: "3"
+services:
+
+  grafana:
+    image: grafana/grafana:7.1.5
+    container_name: grafana
+    restart: always
+    user: 4242:4242
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    networks:
+      - rich_net
+    volumes:
+      - ./grafana/lib:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+    environment: 
+      - GF_SECURITY_ADMIN_USER=${FROG_GRAFANA_ADMIN_USER:-elhefe}
+      - GF_SECURITY_ADMIN_PASSWORD=${FROG_GRAFANA_ADMIN_PASSWORD:-FROG!@#frog2014}
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_USERS_ALLOW_ORG_CREATE=false
+      - GF_USERS_DEFAULT_THEME=dark
+      - GF_USERS_VIEWERS_CAN_EDIT=false
+      - GF_USERS_EDITORS_CAN_ADMIN=false
+      
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_METRICS_ENABLED=false
+      
+      - GF_SERVER_ROUTER_LOGGING=false
+      - GF_SERVER_ENABLE_GZIP=true
+      - GF_SNAPSHOTS_EXTERNAL_ENABLED=false
+      - GF_SNAPSHOTS_PUBLIC_MODE=false
+      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=15s
+
+  prometheus:
+    image: prom/prometheus:v2.21.0
+    container_name: prometheus
+    restart: always
+    user: 4242:4242
+    networks:
+      - rich_net
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/var/lib/prometheus'
+      - '--storage.tsdb.retention.time=730d'
+    volumes: 
+      - ./prometheus/etc:/etc/prometheus:ro
+      - ./prometheus/data:/var/lib/prometheus
+
+  telegraf:
+    # For Raspberry Pi
+    # image: arm64v8/telegraf:1.15
+    image: telegraf:1.15-alpine
+    container_name: telegraf
+    restart: always
+    user: 4242:4242
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    ports:
+      - "9273:9273"
+    networks:
+      - rich_net
+
+  nginx:
+    image: nginx:1.19-alpine
+    container_name: nginx
+    restart: always
+    user: 4242:4242
+    networks:
+      - rich_net
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/cache:/var/cache/nginx
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+   
+  certbot:
+    image: certbot/certbot:v1.8.0
+    container_name: certbot
+    restart: always
+    user: 4242:4242
+    networks:
+      - rich_net
+    volumes: 
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/log:/var/log/letsencrypt
+      - ./certbot/lib:/var/lib/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+
+networks:
+  rich_net:
+    driver: bridge

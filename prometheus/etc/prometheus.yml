@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 5s
+scrape_configs:
+  - job_name: frog
+    metrics_path: /metrics
+    scheme: http
+    honor_labels: false
+    honor_timestamps: true
+    sample_limit: 0
+    static_configs:
+      - targets: ['telegraf:9273']
