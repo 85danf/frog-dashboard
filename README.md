@@ -10,3 +10,9 @@ The Accompanying Grafana dashboard shows some relevant info:
     - The value of shares after deducting the Capital Gains Tax (IL)
     - The total value of shares in NIS (based on the scraped exchange rate)
     - An approximation of total value in NIS after all deductions (exchange rates, commissions etc.)
+    
+    
+---
+
+
+This dashboard is served live at [amirichyet.danf.io](https://amirichyet.danf.io/d/xvXThaOMz/frog?orgId=1)
