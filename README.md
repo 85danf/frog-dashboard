@@ -1,3 +1,5 @@
+![Uptime Robot ratio (30 days)](https://img.shields.io/uptimerobot/ratio/m786300921-3c35ee8eefcf4c48c535a87e)
+
 $FROG Value
 -----------------------
 
